@@ -9,7 +9,7 @@ from telegram.ext import (
     filters,
 )
 
-BOT_TOKEN = "8608037300:AAEunU-YJHoCKVvESZBjFOt-a_g_zurs1yU"
+BOT_TOKEN = "8862080298:AAEM63Kky4-YhO_eE_l6YwXl1ynzSVTXrHE"
 
 NAME, LEVEL, DORM, YEAR_DEPARTMENT, USERNAME = range(5)
 
