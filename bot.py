@@ -10,10 +10,13 @@ from telegram.ext import (
 )
 
 # =========================================================
-# BOT TOKEN
+# BOT SETTINGS
 # =========================================================
 
-BOT_TOKEN = "8862080298:AAEM63Kky4-YhO_eE_l6YwXl1ynzSVTXrHE"
+BOT_TOKEN = "YOUR_NEW_TOKEN"
+
+# Replace this with YOUR Telegram numeric Chat ID
+ADMIN_CHAT_ID = 123456789
 
 
 # =========================================================
@@ -30,6 +33,7 @@ INQUIRY = 5
 # =========================================================
 
 def main_menu():
+
     keyboard = [
         [
             InlineKeyboardButton(
@@ -215,6 +219,40 @@ async def get_username(
 
     data = context.user_data
 
+    # Get Telegram information automatically
+    telegram_user = update.effective_user
+
+    telegram_id = telegram_user.id
+    telegram_name = telegram_user.full_name
+
+    # -----------------------------------------------------
+    # SEND REGISTRATION TO ADMIN
+    # -----------------------------------------------------
+
+    admin_message = (
+        "📥 NEW QIRĀʾĀT REGISTRATION\n\n"
+
+        f"👤 Full Name: {data['name']}\n"
+        f"📖 Level: {data['level']}\n"
+        f"🏠 Dorm: {data['dorm']}\n"
+        f"🎓 Year & Department: {data['year_department']}\n"
+        f"📱 Telegram Username: {data['username']}\n\n"
+
+        "──────────────\n"
+        "👤 Telegram Information\n"
+        f"Name: {telegram_name}\n"
+        f"User ID: {telegram_id}"
+    )
+
+    await context.bot.send_message(
+        chat_id=ADMIN_CHAT_ID,
+        text=admin_message
+    )
+
+    # -----------------------------------------------------
+    # SEND CONFIRMATION TO USER
+    # -----------------------------------------------------
+
     await update.message.reply_text(
         "🌷 Jazakillahu khayran for registering!\n\n"
         "Your registration information:\n\n"
@@ -223,7 +261,7 @@ async def get_username(
         f"🏠 Dorm: {data['dorm']}\n"
         f"🎓 Year & Department: {data['year_department']}\n"
         f"📱 Telegram: {data['username']}\n\n"
-        "Your registration has been received.\n"
+        "✅ Your registration has been received.\n\n"
         "We will contact you regarding the Qirāʾāt program, "
         "in shā Allah. 🌸",
         reply_markup=main_menu(),
@@ -270,12 +308,48 @@ async def receive_inquiry(
 
     question = update.message.text
 
+    telegram_user = update.effective_user
+
+    telegram_id = telegram_user.id
+    telegram_name = telegram_user.full_name
+    telegram_username = telegram_user.username
+
+    if telegram_username:
+        telegram_username = f"@{telegram_username}"
+    else:
+        telegram_username = "Not provided"
+
+    # -----------------------------------------------------
+    # SEND INQUIRY TO ADMIN
+    # -----------------------------------------------------
+
+    admin_message = (
+        "❓ NEW INQUIRY\n\n"
+
+        f"💬 Question:\n{question}\n\n"
+
+        "──────────────\n"
+
+        "👤 User Information\n"
+        f"Name: {telegram_name}\n"
+        f"Username: {telegram_username}\n"
+        f"User ID: {telegram_id}"
+    )
+
+    await context.bot.send_message(
+        chat_id=ADMIN_CHAT_ID,
+        text=admin_message
+    )
+
+    # -----------------------------------------------------
+    # SEND CONFIRMATION TO USER
+    # -----------------------------------------------------
+
     await update.message.reply_text(
         "🌷 Jazakillahu khayran for your question!\n\n"
-        "We have received your inquiry:\n\n"
-        f"💬 {question}\n\n"
+        "Your inquiry has been received. 🤍\n\n"
         "We will get back to you regarding your question, "
-        "in shā Allah. 🤍",
+        "in shā Allah.",
         reply_markup=main_menu(),
     )
 
@@ -399,25 +473,25 @@ async def button_handler(
     query = update.callback_query
     await query.answer()
 
-    # -------------------------
+    # -----------------------------------------------------
     # ABOUT JEMMA
-    # -------------------------
+    # -----------------------------------------------------
 
     if query.data == "about_jemma":
 
         await show_about_jemma(update, context)
 
-    # -------------------------
+    # -----------------------------------------------------
     # ABOUT QIRĀʾĀT
-    # -------------------------
+    # -----------------------------------------------------
 
     elif query.data == "about_qirat":
 
         await show_about_qirat(update, context)
 
-    # -------------------------
+    # -----------------------------------------------------
     # BACK TO MAIN MENU
-    # -------------------------
+    # -----------------------------------------------------
 
     elif query.data == "back_menu":
 
@@ -456,9 +530,8 @@ def main():
 
     app = Application.builder().token(BOT_TOKEN).build()
 
-
     # -----------------------------------------------------
-    # QIRĀʾĀT REGISTRATION CONVERSATION
+    # QIRĀʾĀT REGISTRATION
     # -----------------------------------------------------
 
     registration_handler = ConversationHandler(
@@ -513,9 +586,8 @@ def main():
         ],
     )
 
-
     # -----------------------------------------------------
-    # INQUIRY CONVERSATION
+    # INQUIRY
     # -----------------------------------------------------
 
     inquiry_handler = ConversationHandler(
@@ -542,24 +614,21 @@ def main():
         ],
     )
 
-
     # -----------------------------------------------------
-    # START COMMAND
+    # START
     # -----------------------------------------------------
 
     app.add_handler(
         CommandHandler("start", start)
     )
 
-
     # -----------------------------------------------------
-    # QIRĀʾĀT REGISTRATION
+    # QIRĀʾĀT
     # -----------------------------------------------------
 
     app.add_handler(
         registration_handler
     )
-
 
     # -----------------------------------------------------
     # INQUIRY
@@ -569,7 +638,6 @@ def main():
         inquiry_handler
     )
 
-
     # -----------------------------------------------------
     # OTHER BUTTONS
     # -----------------------------------------------------
@@ -577,7 +645,6 @@ def main():
     app.add_handler(
         CallbackQueryHandler(button_handler)
     )
-
 
     # -----------------------------------------------------
     # RUN BOT
