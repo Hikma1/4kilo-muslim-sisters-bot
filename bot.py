@@ -15,10 +15,10 @@ from telegram.error import TelegramError
 # BOT SETTINGS
 # =========================================================
 
-BOT_TOKEN = "YOUR_NEW_TOKEN"
+BOT_TOKEN = "8862080298:AAEM63Kky4-YhO_eE_l6YwXl1ynzSVTXrHE"
 
 # Put your Telegram numeric Chat ID here
-ADMIN_CHAT_ID = 123456789
+ADMIN_CHAT_ID =  1115146260
 
 
 # =========================================================
