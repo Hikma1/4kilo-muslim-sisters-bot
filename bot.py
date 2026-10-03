@@ -13,10 +13,10 @@ from telegram.ext import (
 # BOT SETTINGS
 # =========================================================
 
-BOT_TOKEN = "YOUR_NEW_TOKEN"
+BOT_TOKEN = "8862080298:AAEM63Kky4-YhO_eE_l6YwXl1ynzSVTXrHE"
 
 # Replace this with YOUR Telegram numeric Chat ID
-ADMIN_CHAT_ID = 123456789
+ADMIN_CHAT_ID =  1115146260
 
 
 # =========================================================
