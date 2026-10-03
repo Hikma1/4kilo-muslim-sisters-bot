@@ -1,3 +1,4 @@
+```python
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -8,15 +9,17 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from telegram.error import TelegramError
+
 
 # =========================================================
 # BOT SETTINGS
 # =========================================================
 
-BOT_TOKEN = "8862080298:AAEM63Kky4-YhO_eE_l6YwXl1ynzSVTXrHE"
+BOT_TOKEN = "YOUR_NEW_TOKEN"
 
-# Replace this with YOUR Telegram numeric Chat ID
-ADMIN_CHAT_ID =  1115146260
+# Put your Telegram numeric Chat ID here
+ADMIN_CHAT_ID = 123456789
 
 
 # =========================================================
@@ -26,6 +29,8 @@ ADMIN_CHAT_ID =  1115146260
 NAME, LEVEL, DORM, YEAR_DEPARTMENT, USERNAME = range(5)
 
 INQUIRY = 5
+
+ADMIN_REPLY = 6
 
 
 # =========================================================
@@ -219,14 +224,13 @@ async def get_username(
 
     data = context.user_data
 
-    # Get Telegram information automatically
     telegram_user = update.effective_user
 
     telegram_id = telegram_user.id
     telegram_name = telegram_user.full_name
 
     # -----------------------------------------------------
-    # SEND REGISTRATION TO ADMIN
+    # ADMIN NOTIFICATION
     # -----------------------------------------------------
 
     admin_message = (
@@ -239,18 +243,29 @@ async def get_username(
         f"📱 Telegram Username: {data['username']}\n\n"
 
         "──────────────\n"
+
         "👤 Telegram Information\n"
         f"Name: {telegram_name}\n"
         f"User ID: {telegram_id}"
     )
 
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "💬 Reply to Sister",
+                callback_data=f"reply_to_{telegram_id}"
+            )
+        ]
+    ])
+
     await context.bot.send_message(
         chat_id=ADMIN_CHAT_ID,
-        text=admin_message
+        text=admin_message,
+        reply_markup=keyboard
     )
 
     # -----------------------------------------------------
-    # SEND CONFIRMATION TO USER
+    # USER CONFIRMATION
     # -----------------------------------------------------
 
     await update.message.reply_text(
@@ -312,15 +327,14 @@ async def receive_inquiry(
 
     telegram_id = telegram_user.id
     telegram_name = telegram_user.full_name
-    telegram_username = telegram_user.username
 
-    if telegram_username:
-        telegram_username = f"@{telegram_username}"
+    if telegram_user.username:
+        telegram_username = f"@{telegram_user.username}"
     else:
         telegram_username = "Not provided"
 
     # -----------------------------------------------------
-    # SEND INQUIRY TO ADMIN
+    # ADMIN NOTIFICATION
     # -----------------------------------------------------
 
     admin_message = (
@@ -336,13 +350,23 @@ async def receive_inquiry(
         f"User ID: {telegram_id}"
     )
 
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "💬 Reply to Sister",
+                callback_data=f"reply_to_{telegram_id}"
+            )
+        ]
+    ])
+
     await context.bot.send_message(
         chat_id=ADMIN_CHAT_ID,
-        text=admin_message
+        text=admin_message,
+        reply_markup=keyboard
     )
 
     # -----------------------------------------------------
-    # SEND CONFIRMATION TO USER
+    # USER CONFIRMATION
     # -----------------------------------------------------
 
     await update.message.reply_text(
@@ -351,6 +375,129 @@ async def receive_inquiry(
         "We will get back to you regarding your question, "
         "in shā Allah.",
         reply_markup=main_menu(),
+    )
+
+    context.user_data.clear()
+
+    return ConversationHandler.END
+
+
+# =========================================================
+# ADMIN REPLY — START
+# =========================================================
+
+async def start_admin_reply(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    query = update.callback_query
+    await query.answer()
+
+    # -----------------------------------------------------
+    # SECURITY CHECK
+    # -----------------------------------------------------
+
+    if query.from_user.id != ADMIN_CHAT_ID:
+
+        await query.answer(
+            "You are not authorized to use this.",
+            show_alert=True
+        )
+
+        return ConversationHandler.END
+
+    # -----------------------------------------------------
+    # GET TARGET USER ID
+    # -----------------------------------------------------
+
+    try:
+        target_user_id = int(
+            query.data.replace("reply_to_", "")
+        )
+    except ValueError:
+
+        await query.edit_message_text(
+            "❌ Unable to identify the user."
+        )
+
+        return ConversationHandler.END
+
+    # Save target user
+    context.user_data["reply_to_user"] = target_user_id
+
+    await query.message.reply_text(
+        "💬 Reply to Sister\n\n"
+        "Please type the message you want to send.\n\n"
+        "Type /cancel to cancel."
+    )
+
+    return ADMIN_REPLY
+
+
+# =========================================================
+# SEND ADMIN REPLY TO SISTER
+# =========================================================
+
+async def send_admin_reply(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    # -----------------------------------------------------
+    # SECURITY CHECK
+    # -----------------------------------------------------
+
+    if update.effective_user.id != ADMIN_CHAT_ID:
+
+        return ConversationHandler.END
+
+    target_user_id = context.user_data.get(
+        "reply_to_user"
+    )
+
+    if not target_user_id:
+
+        await update.message.reply_text(
+            "❌ I couldn't find the sister you're replying to."
+        )
+
+        return ConversationHandler.END
+
+    message = update.message.text
+
+    # -----------------------------------------------------
+    # SEND MESSAGE TO SISTER
+    # -----------------------------------------------------
+
+    try:
+
+        await context.bot.send_message(
+            chat_id=target_user_id,
+            text=(
+                "🌸 Message from Muslim Sisters 4Kilo Jemma\n\n"
+                f"{message}"
+            )
+        )
+
+    except TelegramError:
+
+        await update.message.reply_text(
+            "❌ I couldn't send the message.\n\n"
+            "The sister may have blocked the bot or "
+            "the conversation is no longer available."
+        )
+
+        context.user_data.clear()
+
+        return ConversationHandler.END
+
+    # -----------------------------------------------------
+    # CONFIRM TO ADMIN
+    # -----------------------------------------------------
+
+    await update.message.reply_text(
+        "✅ Your message has been sent to the sister."
     )
 
     context.user_data.clear()
@@ -560,105 +707,5 @@ def main():
             ],
 
             DORM: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND,
-                    get_dorm
-                )
-            ],
-
-            YEAR_DEPARTMENT: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND,
-                    get_year_department
-                )
-            ],
-
-            USERNAME: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND,
-                    get_username
-                )
-            ],
-        },
-
-        fallbacks=[
-            CommandHandler("cancel", cancel)
-        ],
-    )
-
-    # -----------------------------------------------------
-    # INQUIRY
-    # -----------------------------------------------------
-
-    inquiry_handler = ConversationHandler(
-
-        entry_points=[
-            CallbackQueryHandler(
-                start_inquiry,
-                pattern="^inquiry$"
-            )
-        ],
-
-        states={
-
-            INQUIRY: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND,
-                    receive_inquiry
-                )
-            ],
-        },
-
-        fallbacks=[
-            CommandHandler("cancel", cancel)
-        ],
-    )
-
-    # -----------------------------------------------------
-    # START
-    # -----------------------------------------------------
-
-    app.add_handler(
-        CommandHandler("start", start)
-    )
-
-    # -----------------------------------------------------
-    # QIRĀʾĀT
-    # -----------------------------------------------------
-
-    app.add_handler(
-        registration_handler
-    )
-
-    # -----------------------------------------------------
-    # INQUIRY
-    # -----------------------------------------------------
-
-    app.add_handler(
-        inquiry_handler
-    )
-
-    # -----------------------------------------------------
-    # OTHER BUTTONS
-    # -----------------------------------------------------
-
-    app.add_handler(
-        CallbackQueryHandler(button_handler)
-    )
-
-    # -----------------------------------------------------
-    # RUN BOT
-    # -----------------------------------------------------
-
-    print("Bot is running...")
-
-    app.run_polling()
-
-
-# =========================================================
-# START PROGRAM
-# =========================================================
-
-if __name__ == "__main__":
-    main()
-
+                Mess
+```
