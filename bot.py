@@ -40,7 +40,7 @@ ADMIN_REPLY = 6
 def main_menu():
     keyboard = [
         [
-            InlineKeyboardButton("📖 Qirāʾāt Registration", callback_data="register"),
+            InlineKeyboardButton("📖 Qirat Registration", callback_data="register"),
         ],
         [
             InlineKeyboardButton("❓ Any Question / Inquiry", callback_data="inquiry"),
@@ -49,7 +49,7 @@ def main_menu():
             InlineKeyboardButton("🌸 About Jemma", callback_data="about_jemma"),
         ],
         [
-            InlineKeyboardButton("📖 About Qirāʾāt", callback_data="about_qiraat"),
+            InlineKeyboardButton("📖 About Qirat", callback_data="about_qiraat"),
         ],
     ]
 
@@ -67,9 +67,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     welcome_message = (
         "🌸 *Welcome to Muslim Sisters 4Kilo Jemma Bot!*\n\n"
-        "Assalamu Alaikum wa Rahmatullahi wa Barakatuh 🌷\n\n"
+        "Asalamualaikum warahmatullahi wabarakatullah 🌷\n\n"
         "This bot is here to help sisters connect with Jemma, "
-        "register for Qirāʾāt, ask questions, and learn more about our activities.\n\n"
+        "register for Qirat, ask questions, and learn more about our activities.\n\n"
         "Please choose an option below:"
     )
 
