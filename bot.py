@@ -92,7 +92,7 @@ async def start_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     context.user_data.clear()
 
     await query.message.reply_text(
-        "📖 *Qirāʾāt Registration*\n\n"
+        "📖 *Qirat Registration*\n\n"
         "Let's start your registration.\n\n"
         "👤 Please enter your *full name*:",
         parse_mode="Markdown",
@@ -106,7 +106,7 @@ async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["name"] = update.message.text
 
     await update.message.reply_text(
-        "📖 What is your Qirāʾāt level?\n\n"
+        "📖 What is your Qirat level?\n\n"
         "Please choose one:\n\n"
         "• Qaida\n"
         "• Nazr\n"
