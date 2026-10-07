@@ -679,12 +679,30 @@ def main():
     )
 
     # --------------------------------------------------------
-    # START BOT
+    # START BOT WITH WEBHOOK
     # --------------------------------------------------------
 
-    print("🌸 Muslim Sisters 4Kilo Jemma Bot is running...")
+    # Render provides PORT and RENDER_EXTERNAL_URL automatically.
+    port = int(os.getenv("PORT", "10000"))
+    render_url = os.getenv("RENDER_EXTERNAL_URL")
 
-    app.run_polling()
+    if not render_url:
+        raise ValueError(
+            "RENDER_EXTERNAL_URL is missing. This is required for webhook deployment."
+        )
+
+    webhook_url = f"{render_url}/telegram"
+
+    print("🌸 Muslim Sisters 4Kilo Jemma Bot is running with webhook...")
+
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        url_path="telegram",
+        webhook_url=webhook_url,
+        drop_pending_updates=True,
+        allowed_updates=Update.ALL_TYPES,
+    )
 
 
 # ============================================================
